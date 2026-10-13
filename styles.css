@@ -262,3 +262,12 @@ html, body { overscroll-behavior: none; }
 @media (min-width: 700px) { .auth-modal { align-items: center; } }
 @media (max-width: 420px) { .auth-modal { padding: 8px; } .auth-panel { padding: 27px 19px 18px; border-radius: 22px; } .auth-panel h2 { font-size: 28px; } }
 @media (prefers-reduced-motion: reduce) { .auth-modal, .auth-panel { transition-duration: .01ms !important; } }
+
+
+/* Поле пароля с кнопкой показа */
+.password-field { position: relative; width: 100%; }
+.auth-panel .password-field input { padding-right: 54px; }
+.password-toggle { position: absolute; top: 50%; right: 7px; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; transform: translateY(-50%); border: 0; border-radius: 50%; background: transparent; color: #c9c6c0; cursor: pointer; transition: color 220ms ease, background-color 220ms ease; }
+.password-toggle:hover { background: #ffffff12; color: #fff; }
+.password-toggle svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.password-toggle[aria-pressed="true"] svg { color: #fff; }
