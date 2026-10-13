@@ -245,3 +245,20 @@ footer strong { font: inherit; letter-spacing: inherit; }
 #order-form input { font-size: 16px; }
 button { touch-action: manipulation; }
 html, body { overscroll-behavior: none; }
+[hidden] { display: none !important; }
+.auth-modal { position: fixed; inset: 0; z-index: 21; display: grid; align-items: end; justify-items: center; padding: 14px; background: #000b; backdrop-filter: blur(8px); opacity: 0; visibility: hidden; transition: opacity 280ms ease, visibility 280ms ease; }
+.auth-modal.is-open { opacity: 1; visibility: visible; }
+.auth-panel { position: relative; width: min(100%, 480px); max-height: min(88dvh, 760px); overflow-y: auto; overscroll-behavior: contain; padding: 30px 24px 22px; border: 1px solid #ffffff28; border-radius: 25px; background: radial-gradient(ellipse at 50% 0, #ffffff12, transparent 42%), #10100f; box-shadow: 0 24px 90px #000c, inset 0 1px #ffffff12; transform: translateY(24px) scale(.985); transition: transform 420ms cubic-bezier(.2,.7,.2,1); }
+.auth-modal.is-open .auth-panel { transform: translateY(0) scale(1); }
+.auth-panel h2 { margin: 0; font: 400 31px/1.1 Georgia, serif; letter-spacing: -.035em; }
+.auth-panel form { display: flex; flex-direction: column; }
+.auth-panel label { margin: 13px 0 7px; color: #d5d2cd; font-size: 10px; letter-spacing: .04em; }
+.auth-panel input { width: 100%; min-height: 46px; padding: 0 14px; border: 1px solid #ffffff30; border-radius: 12px; outline: none; background: #ffffff08; color: #f5f3ef; font: inherit; font-size: 16px; }
+.auth-panel input:focus { border-color: #ffffff90; box-shadow: 0 0 0 3px #ffffff12; }
+.auth-switch { display: block; width: 100%; margin-top: 12px; border: 0; background: transparent; color: #d3d0cb; font-size: 11px; text-decoration: underline; cursor: pointer; }
+.auth-feedback { min-height: 1em; margin: 12px 0 0; color: #aaa; font-size: 11px; line-height: 1.5; text-align: center; }
+.account-strip { width: min(100%, 370px); display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; color: #aaa; font-size: 10px; }
+.account-strip button { border: 1px solid #ffffff30; border-radius: 999px; background: #ffffff08; color: #eee; padding: 7px 12px; cursor: pointer; }
+@media (min-width: 700px) { .auth-modal { align-items: center; } }
+@media (max-width: 420px) { .auth-modal { padding: 8px; } .auth-panel { padding: 27px 19px 18px; border-radius: 22px; } .auth-panel h2 { font-size: 28px; } }
+@media (prefers-reduced-motion: reduce) { .auth-modal, .auth-panel { transition-duration: .01ms !important; } }
