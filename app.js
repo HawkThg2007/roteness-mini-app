@@ -33,27 +33,54 @@
   const orderModal = document.querySelector("#order-modal"), orderForm = document.querySelector("#order-form");
   const authModal = document.querySelector("#auth-modal"), authForm = document.querySelector("#auth-form");
   const toast = document.querySelector("#toast"), authFeedback = document.querySelector("#auth-feedback");
+  const authEmail = document.querySelector("#auth-email"), authPassword = document.querySelector("#auth-password");
+  const emailLabel = document.querySelector('label[for="auth-email"]');
+  const passwordLabel = document.querySelector('label[for="auth-password"]');
+  const authTitle = document.querySelector("#auth-title"), authDescription = document.querySelector("#auth-description");
+  const authSubmit = document.querySelector("#auth-submit"), authSwitch = document.querySelector("#auth-switch");
+  const authForgot = document.querySelector("#auth-forgot");
   const cityInput = document.querySelector("#city"), mapLabel = document.querySelector("#map-search-label");
   const accountStrip = document.querySelector("#account-strip"), accountEmail = document.querySelector("#account-email");
   let toastTimer, supabase, session = null, accountsEnabled = false, authMode = "login";
+
   function showToast(message, duration = 3200) {
     clearTimeout(toastTimer); toast.classList.remove("show"); toast.textContent = message;
-    void toast.offsetWidth; toast.classList.add("show"); toastTimer = setTimeout(() => toast.classList.remove("show"), duration);
+    void toast.offsetWidth; toast.classList.add("show");
+    toastTimer = setTimeout(() => toast.classList.remove("show"), duration);
   }
   function open(modal) { modal.classList.add("is-open"); modal.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); }
-  function close(modal) { modal.classList.remove("is-open"); modal.setAttribute("aria-hidden", "true"); if (![orderModal, authModal].some(m => m.classList.contains("is-open"))) document.body.classList.remove("modal-open"); }
+  function close(modal) {
+    modal.classList.remove("is-open"); modal.setAttribute("aria-hidden", "true");
+    if (![orderModal, authModal].some(m => m.classList.contains("is-open"))) document.body.classList.remove("modal-open");
+  }
   function renderSession(value) {
     session = value; accountStrip.hidden = !(accountsEnabled && session);
     accountEmail.textContent = session?.user?.email || "";
   }
-  function openAuth() {
-    authFeedback.textContent = ""; open(authModal); setTimeout(() => document.querySelector("#auth-email").focus(), 120);
+  function setAuthView(mode) {
+    authMode = mode;
+    const signup = mode === "signup", passwordUpdate = mode === "passwordUpdate";
+    emailLabel.hidden = passwordUpdate; authEmail.hidden = passwordUpdate;
+    authEmail.disabled = passwordUpdate; authEmail.required = !passwordUpdate;
+    passwordLabel.hidden = false; authPassword.hidden = false;
+    authPassword.disabled = false; authPassword.required = true; authPassword.minLength = 8;
+    authPassword.autocomplete = signup || passwordUpdate ? "new-password" : "current-password";
+    authPassword.placeholder = passwordUpdate ? "Новый пароль" : "Не менее 8 символов";
+    authTitle.textContent = passwordUpdate ? "Новый пароль" : signup ? "Создать аккаунт" : "Войти в аккаунт";
+    authDescription.textContent = passwordUpdate ? "Придумай новый пароль для своего аккаунта." : signup ? "Укажи почту и придумай пароль для аккаунта." : "Войди, чтобы оформить предзаказ.";
+    authSubmit.innerHTML = (passwordUpdate ? "Сохранить пароль" : signup ? "Зарегистрироваться" : "Войти") + " <span>↗</span>";
+    authSwitch.hidden = passwordUpdate; authForgot.hidden = signup || passwordUpdate;
+    authSwitch.textContent = signup ? "Уже есть аккаунт? Войти" : "Создать аккаунт";
+    authFeedback.textContent = "";
   }
+  function openAuth() { setAuthView("login"); open(authModal); setTimeout(() => authEmail.focus(), 120); }
+  function startPasswordUpdate() { setAuthView("passwordUpdate"); open(authModal); setTimeout(() => authPassword.focus(), 120); }
+
   document.querySelector("#preorder").addEventListener("click", () => {
     telegram?.HapticFeedback?.impactOccurred("light");
     if (accountsEnabled && !session) { openAuth(); return; }
-    const tgName = telegram?.initDataUnsafe?.user?.username;
-    if (tgName && !document.querySelector("#tg-username").value) document.querySelector("#tg-username").value = "@" + tgName;
+    const name = telegram?.initDataUnsafe?.user?.username;
+    if (name && !document.querySelector("#tg-username").value) document.querySelector("#tg-username").value = "@" + name;
     open(orderModal); setTimeout(() => document.querySelector("#tg-username").focus(), 120);
   });
   document.querySelector("#modal-close").addEventListener("click", () => close(orderModal));
@@ -61,22 +88,30 @@
   [orderModal, authModal].forEach(modal => modal.addEventListener("click", e => { if (e.target === modal) close(modal); }));
   document.addEventListener("keydown", e => { if (e.key === "Escape") { close(orderModal); close(authModal); } });
 
-  document.querySelector("#auth-switch").addEventListener("click", () => {
-    authMode = authMode === "login" ? "signup" : "login";
-    document.querySelector("#auth-title").textContent = authMode === "login" ? "Войти в аккаунт" : "Создать аккаунт";
-    document.querySelector("#auth-description").textContent = authMode === "login" ? "Войди, чтобы оформить предзаказ." : "Укажи почту и придумай пароль для аккаунта.";
-    document.querySelector("#auth-submit").innerHTML = (authMode === "login" ? "Войти" : "Зарегистрироваться") + " <span>↗</span>";
-    document.querySelector("#auth-password").autocomplete = authMode === "login" ? "current-password" : "new-password";
-    document.querySelector("#auth-switch").textContent = authMode === "login" ? "Создать аккаунт" : "Уже есть аккаунт? Войти";
-    authFeedback.textContent = "";
+  authSwitch.addEventListener("click", () => setAuthView(authMode === "login" ? "signup" : "login"));
+  authForgot.addEventListener("click", async () => {
+    if (!supabase) { authFeedback.textContent = "Подключение аккаунтов ещё не настроено."; return; }
+    if (!authEmail.value.trim()) { authFeedback.textContent = "Сначала введи адрес электронной почты."; authEmail.focus(); return; }
+    const oldText = authForgot.textContent;
+    authForgot.disabled = true; authForgot.textContent = "Отправляем письмо…"; authFeedback.textContent = "";
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(authEmail.value.trim(), { redirectTo: location.origin });
+      if (error) throw error;
+      authFeedback.textContent = "Если аккаунт с этой почтой существует, письмо для смены пароля отправлено.";
+    } catch (error) { authFeedback.textContent = error.message || "Не удалось отправить письмо. Попробуй позже."; }
+    finally { authForgot.disabled = false; authForgot.textContent = oldText; }
   });
   authForm.addEventListener("submit", async e => {
-    e.preventDefault(); if (!supabase) { authFeedback.textContent = "Подключение аккаунтов ещё не настроено."; return; }
-    const button = document.querySelector("#auth-submit"), oldText = button.textContent;
-    button.disabled = true; button.textContent = "Подождите…"; authFeedback.textContent = "";
-    const email = document.querySelector("#auth-email").value.trim(), password = document.querySelector("#auth-password").value;
+    e.preventDefault();
+    if (!supabase) { authFeedback.textContent = "Подключение аккаунтов ещё не настроено."; return; }
+    authSubmit.disabled = true; authSubmit.textContent = "Подождите…"; authFeedback.textContent = "";
+    const email = authEmail.value.trim(), password = authPassword.value;
     try {
-      if (authMode === "signup") {
+      if (authMode === "passwordUpdate") {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        close(authModal); setAuthView("login"); authForm.reset(); showToast("Пароль изменён. Теперь можно войти.");
+      } else if (authMode === "signup") {
         const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: location.origin } });
         if (error) throw error;
         if (!data.session) { authFeedback.textContent = "Аккаунт создан. Проверь почту и подтверди адрес, затем войди."; return; }
@@ -86,8 +121,11 @@
         if (error) throw error;
         renderSession(data.session); close(authModal); showToast("Вход выполнен.");
       }
-    } catch (error) { authFeedback.textContent = error.message || "Не удалось выполнить вход. Проверь данные."; }
-    finally { button.disabled = false; button.textContent = oldText; }
+    } catch (error) { authFeedback.textContent = error.message || "Не удалось выполнить действие. Проверь данные."; }
+    finally {
+      authSubmit.disabled = false;
+      authSubmit.innerHTML = (authMode === "passwordUpdate" ? "Сохранить пароль" : authMode === "signup" ? "Зарегистрироваться" : "Войти") + " <span>↗</span>";
+    }
   });
   document.querySelector("#logout").addEventListener("click", async () => { await supabase?.auth.signOut(); renderSession(null); showToast("Ты вышел из аккаунта."); });
 
@@ -115,7 +153,8 @@
       const response = await fetch(API_URL, { method: "POST", headers, body: JSON.stringify({ username, phone, fullName: document.querySelector("#full-name").value.trim(), city: cityInput.value.trim(), pickupAddress: document.querySelector("#pickup-address").value.trim() }) });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.ok) throw new Error(result.error || "Не удалось отправить заявку. Попробуй ещё раз");
-      telegram?.HapticFeedback?.notificationOccurred("success"); close(orderModal); orderForm.reset(); mapLabel.textContent = "Показать пункты СДЭК на карте"; showToast("Заявка отправлена. Спасибо!", 3500);
+      telegram?.HapticFeedback?.notificationOccurred("success"); close(orderModal); orderForm.reset();
+      mapLabel.textContent = "Показать пункты СДЭК на карте"; showToast("Заявка отправлена. Спасибо!", 3500);
     } catch (error) { showToast(error.message || "Не удалось связаться с сервером. Попробуй позже", 4500); }
     finally { button.disabled = false; button.textContent = oldText; }
   });
@@ -125,8 +164,11 @@
     if (accountsEnabled) {
       const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
       supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
+      supabase.auth.onAuthStateChange((event, nextSession) => {
+        renderSession(nextSession);
+        if (event === "PASSWORD_RECOVERY") startPasswordUpdate();
+      });
       const { data } = await supabase.auth.getSession(); renderSession(data.session);
-      supabase.auth.onAuthStateChange((_event, nextSession) => renderSession(nextSession));
     }
   }).catch(() => { accountsEnabled = false; });
 })();
