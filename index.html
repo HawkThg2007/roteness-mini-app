@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#050505">
   <title>DROP 001 — roteness</title>
   <link rel="stylesheet" href="styles.css">
@@ -42,42 +42,23 @@
       <span class="modal-kicker">DROP 001 · PRE-ORDER</span>
       <h2 id="order-title">Оставить заявку</h2>
       <p class="modal-description">Заполни данные для оформления предзаказа.</p>
-
       <form id="order-form" novalidate>
         <label for="tg-username">Telegram username</label>
         <input id="tg-username" name="username" type="text" placeholder="@username" autocomplete="username" required>
-        
-
         <label for="phone">Номер телефона</label>
         <input id="phone" name="phone" type="tel" placeholder="+79000000000" autocomplete="tel" inputmode="tel" minlength="12" maxlength="12" pattern="\+7[0-9]{10}" required>
-        
-
         <label for="full-name">ФИО</label>
         <input id="full-name" name="fullName" type="text" placeholder="Фамилия Имя Отчество" autocomplete="name" required>
-
         <label for="city">Город проживания</label>
         <input id="city" name="city" type="text" placeholder="Например, Москва" autocomplete="address-level2" required>
-
         <label for="pickup-address">Адрес ближайшего пункта СДЭК</label>
         <input id="pickup-address" name="pickupAddress" type="text" placeholder="Вставь адрес выбранного пункта" autocomplete="street-address" required>
         <p class="map-hint">Укажи город, открой карту и выбери удобный пункт. Его адрес можно вставить сюда.</p>
-
         <button class="map-search" id="map-search" type="button"><span aria-hidden="true">⌖</span> <span id="map-search-label">Показать пункты СДЭК на карте</span></button>
         <button class="form-submit" type="submit">Продолжить <span>↗</span></button>
-        <p class="demo-note">Черновик формы: заявка пока не отправляется.</p>
       </form>
     </section>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
