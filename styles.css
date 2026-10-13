@@ -237,3 +237,11 @@ body.modal-open { overflow: hidden; }
 
 .toast { z-index: 30; }
 
+/* Запрошенные финальные настройки */
+.brand { margin-bottom: 8px; }
+.intro { margin-top: 0; }
+footer { gap: 8px; font-size: 16px; letter-spacing: .08em; }
+footer strong { font: inherit; letter-spacing: inherit; }
+#order-form input { font-size: 16px; }
+button { touch-action: manipulation; }
+html, body { overscroll-behavior: none; }
