@@ -33,7 +33,9 @@
   const orderModal = document.querySelector("#order-modal"), orderForm = document.querySelector("#order-form");
   const authModal = document.querySelector("#auth-modal"), authForm = document.querySelector("#auth-form");
   const toast = document.querySelector("#toast"), authFeedback = document.querySelector("#auth-feedback");
+  const authName = document.querySelector("#auth-name"), authNameLabel = document.querySelector("#auth-name-label");
   const authEmail = document.querySelector("#auth-email"), authPassword = document.querySelector("#auth-password");
+  const passwordToggle = document.querySelector("#password-toggle");
   const emailLabel = document.querySelector('label[for="auth-email"]');
   const passwordLabel = document.querySelector('label[for="auth-password"]');
   const authTitle = document.querySelector("#auth-title"), authDescription = document.querySelector("#auth-description");
@@ -60,6 +62,11 @@
   function setAuthView(mode) {
     authMode = mode;
     const signup = mode === "signup", passwordUpdate = mode === "passwordUpdate";
+    authPassword.type = "password";
+    passwordToggle.setAttribute("aria-pressed", "false");
+    passwordToggle.setAttribute("aria-label", "Показать пароль");
+    authNameLabel.hidden = !signup; authName.hidden = !signup;
+    authName.disabled = !signup; authName.required = signup;
     emailLabel.hidden = passwordUpdate; authEmail.hidden = passwordUpdate;
     authEmail.disabled = passwordUpdate; authEmail.required = !passwordUpdate;
     passwordLabel.hidden = false; authPassword.hidden = false;
@@ -88,6 +95,12 @@
   [orderModal, authModal].forEach(modal => modal.addEventListener("click", e => { if (e.target === modal) close(modal); }));
   document.addEventListener("keydown", e => { if (e.key === "Escape") { close(orderModal); close(authModal); } });
 
+  passwordToggle.addEventListener("click", () => {
+    const show = authPassword.type === "password";
+    authPassword.type = show ? "text" : "password";
+    passwordToggle.setAttribute("aria-pressed", String(show));
+    passwordToggle.setAttribute("aria-label", show ? "Скрыть пароль" : "Показать пароль");
+  });
   authSwitch.addEventListener("click", () => setAuthView(authMode === "login" ? "signup" : "login"));
   authForgot.addEventListener("click", async () => {
     if (!supabase) { authFeedback.textContent = "Подключение аккаунтов ещё не настроено."; return; }
@@ -112,7 +125,7 @@
         if (error) throw error;
         close(authModal); setAuthView("login"); authForm.reset(); showToast("Пароль изменён. Теперь можно войти.");
       } else if (authMode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: location.origin } });
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { name: authName.value.trim() }, emailRedirectTo: location.origin } });
         if (error) throw error;
         if (!data.session) { authFeedback.textContent = "Аккаунт создан. Проверь почту и подтверди адрес, затем войди."; return; }
         renderSession(data.session); close(authModal); showToast("Аккаунт создан. Теперь можно оформить предзаказ.");
